@@ -124,26 +124,38 @@ collection_link_input = InputField("OpenSea Collection Link:", 2, 0, 1)
 start_num_input = InputField("Start Number:", 3, 0, 2)
 end_num_input = InputField("End Number:", 4, 0, 3)
 price = InputField("Default Price:", 5, 0, 4)
+project_path = main_directory
+chrome_path = 'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe'
 
+def open_chrome_profile():
+    print('chrome open')
+    
+    subprocess.Popen(
+        [
+            chrome_path,
+            "--remote-debugging-port=9222",
+            "--user-data-dir=" + project_path + "/chrome_profile",
+        ],
+        shell=True,
+    )
+    
 def main_program_loop():
 
     if len(end_num_input.input_field.get()) > 5 :
         messagebox.showwarning("showwarning", "Start / end number range 0 - 99999")
         sys.exit()
 
-    project_path = main_directory
     collection_link = collection_link_input.input_field.get()
     start_num = int(start_num_input.input_field.get())
     end_num = int(end_num_input.input_field.get())
     loop_price = float(price.input_field.get())
 
-    ##chromeoptions
+    print('driver open')
     options = webdriver.ChromeOptions()
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    #options.add_experimental_option("debuggerAddress", "localhost:8989")
-    driver = webdriver.Chrome(executable_path=project_path+"/chromedriver.exe",options=options)
+    options.add_experimental_option("debuggerAddress", "127.0.0.1:9222")
+    driver = webdriver.Chrome(project_path+"\chromedriver.exe",options=options)
+    
     wait = WebDriverWait(driver, 60)
-
     ###wait for methods
     def wait_css_selector(code):
         wait.until(
@@ -158,7 +170,6 @@ def main_program_loop():
 
     Lines = []
     while end_num >= start_num:
-        print(start_num)
         if is_numformat.get():
             start_numformat = f"{ start_num:04}"
         else:
@@ -179,7 +190,7 @@ def main_program_loop():
                 print("Refresh")
                 with open(os.path.join(sys.path[0], "Log.txt"),  'a') as outputfile:  # Use file to refer to the file object
                     outputfile.write("Starting Point This Page Needed To Be Refreshed \n")
-                driver.get(collection_link)
+                driver.get(collection_link+"/"+str(start_num))
                 time.sleep(5)
                 wait_E = True    
         #HKN F
@@ -445,7 +456,7 @@ def modify_Scrape_txt():#HKN
     with open(os.path.join(sys.path[0], "modified_Scraper.txt"),  'a') as outputfile:  # Use file to refer to the file object
         for line in Lines:
             outputfile.write(str(line))
-
+                
 is_listing = BooleanVar()
 is_listing.set(True) 
 
@@ -464,7 +475,8 @@ tk.Radiobutton(duration_date, text="90 days", variable=duration_value, value=90,
 tk.Radiobutton(duration_date, text="180 days", variable=duration_value, value=180, anchor="w", command=save_duration, width=7).grid(row=0, column=6)
 duration_date.label = Label(root, text="Duration:", anchor="nw", width=20, height=2 )
 duration_date.label.grid(row=15, column=0, padx=12, pady=0)
-
+open_browser = tkinter.Button(root, width=50, height=1,  text="Open Chrome Browser", command=open_chrome_profile)
+open_browser.grid(row=23, column=1, pady=2)
 button_start = tkinter.Button(root, width=44, height=2, bg="green", fg="white", text="Start", command=partial(main_program_loop))#command=lambda: main_program_loop("Full")
 button_start['font'] = font.Font(size=10, weight='bold')
 button_start.grid(row=25, column=1, pady=2)
